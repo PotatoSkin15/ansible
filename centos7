@@ -1,0 +1,95 @@
+---
+- hosts: all
+  vars:
+  common_packages:
+    - vim
+    - git
+    - wget
+    - openssh
+    - net-tools
+    - firewalld
+    - zip
+    - gzip
+    - bzip2
+    - curl
+    - dialog
+    - nfs-utils
+    - xinetd
+    - tar
+    - m4
+    - mkpasswd
+  remote_user: root
+  tasks:
+  - include: tasks/users.yml
+
+  - name: install epel repo
+    rpm_key: state=present key=https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7Server
+    yum: name=https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm state=present
+
+  - name: install webtatic repo
+    rpm_key: state=present key=https://mirror.webtatic.com/yum/RPM-GPG-KEY-webtatic-el7
+    yum: name=https://mirror.webtatic.com/yum/el7/webtatic-release.rpm state=present
+
+  - name: update all current installed packages
+    yum: name=* state=latest
+
+  - name: install common tools
+    yum: state=present name={{ item }}
+    with_items: common_packages
+
+  - name: install the 'Development tools' package group
+    yum: name="@Development tools" state=present
+
+  - name: disable selinux
+    command: setenforce 0
+
+  - name: put selinux in permissive mode
+    selinux: policy=targeted state=permissive
+
+  - name: enter default firewalld rules, start and enable service
+    notify: Start and enable firewalld
+    firewalld: service=ssh permanent=true state=enabled
+    notify: Restart firewalld
+
+  - name: disallow password authentication
+    lineinfile: dest=/etc/ssh/sshd_config
+      state=present
+      regexp="{{ item.regexp }}"
+      line="{{ item.line }}"
+    with_items:
+      - { regexp: '^PasswordAuthentication', line: 'PasswordAuthentication no' }
+      - { regexp: '^PermitRootLogin', line: 'PermitRootLogin no' }
+      - { regexp: '^ChallengeResponseAuthentication', 'ChallengeResponseAuthentication yes' }
+
+  - name: change login.defs for new passwd requirements
+    lineinfile: dest=/etc/login.defs
+      state=present
+      regexp="{{ item.regexp }}"
+      line="{{ item.line }}"
+    with_items:
+      - { regexp: '^PASS_MAX_DAYS', line: 'PASS_MAX_DAYS   90' }
+      - { regexp: '^PASS_MIN_DAYS', line: 'PASS_MIN_DAYS   2' }
+      - { regexp: '^PASS_MIN_LEN', line: 'PASS_MIN_LEN   12' }
+      - { regexp: '^PASS_WARN_AGE', line: 'PASS_WARN_AGE   14' }
+
+  - name: change passwd pam.so file
+    lineinfile: dest=/etc/pam.d/system-auth
+      state=present
+      regexp="{{ item.regexp }}"
+      line="{{ item.line }}"
+    with_items:
+      - { regexp: '^password    sufficient    pam_unix.so sha512', line: 'password    sufficient    pam_unix.so sha512 shadow nullok try_first_pass use_authtok remember=5' }
+      - { regexp: '^password requisite pam_pwquality.so', line: 'password requisite pam_cracklib.so try_first_pass retry=3 type= ucredit=-2 lcredit=-2 dcredit=-2 ocredit=-2' }
+    insertafter='^# User changes will be destroyed the next time authconfig is run.' line='auth        required      pam_tally2.so deny=3'
+    insertafter='^# User changes will be destroyed the next time authconfig is run.' line='auth        required      pam_env.so'
+    notify: Restart ssh
+
+  handlers:
+  - name: Start and enable firewalld
+    services: name=firewall-cmd state=started enabled=yes
+
+  - name: Restart firewalld
+    services: name=firewall-cmd state=restarted
+
+  - name: Restart ssh
+    services: name=ssh state=restarted
