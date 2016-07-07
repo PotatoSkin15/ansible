@@ -20,6 +20,8 @@
       - mkpasswd
   remote_user: root
   tasks:
+  - include: users/users.yml
+
   - name: install epel key
     rpm_key: state=present key=https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7Server
 
@@ -40,7 +42,7 @@
     with_items: "{{common_packages}}"
 
   - name: install the 'Development tools' package group
-    yum: name="@Development tools" state=present
+    yum: name="@^Development tools" state=present
 
   - name: disable selinux
     command: setenforce 0
