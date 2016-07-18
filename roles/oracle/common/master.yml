@@ -1,0 +1,83 @@
+---
+- hosts: all
+  vars:
+    - common_packages:
+      - vim
+      - git
+      - wget
+      - openssh
+      - net-tools
+      - firewalld
+      - zip
+      - gzip
+      - bzip2
+      - curl
+      - dialog
+      - nfs-utils
+      - xinetd
+      - tar
+      - m4
+      - mkpasswd
+  remote_user: root
+  tasks:
+  - include: users/users.yml
+
+  - name: install epel key
+    rpm_key: state=present key=https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7Server
+
+  - name: install epel repo
+    yum: name=https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm state=present
+
+  - name: install webtatic key
+    rpm_key: state=present key=https://mirror.webtatic.com/yum/RPM-GPG-KEY-webtatic-el7
+
+  - name: install webtatic repo
+    yum: name=https://mirror.webtatic.com/yum/el7/webtatic-release.rpm state=present
+
+  - name: update all current installed packages
+    yum: name=* state=latest
+
+  - name: install common tools
+    yum: state=present name={{ item }}
+    with_items: "{{common_packages}}"
+
+  - name: install the 'Development tools' package group
+    yum: name="@^Development tools" state=present
+
+  - name: disable selinux
+    command: setenforce 0
+
+  - name: put selinux in permissive mode
+    selinux: policy=targeted state=permissive
+
+  - name: start and enable firewalld
+    service: name=firewall-cmd state=started enabled=yes
+
+  - name: ssh firewall configs
+    firewalld: service=ssh permanent=true state=enabled
+    notify: Restart firewalld
+
+  - name: write ssh config file
+    template: src=/srv/rhel/common/templates/sshd_config.j2 dest=/etc/ssh/sshd_config
+
+  - name: write login.defs file
+    template: src=/srv/rhel/common/templates/login.defs.j2 dest=/etc/login.defs
+
+  - name: write system-auth-ac file
+    template: src=/srv/rhel/common/templates/system-auth-ac.j2 dest=/etc/pam.d/system-auth-ac
+    notify: Restart ssh
+
+  handlers:
+  - name: Start and enable firewalld
+    service:
+      name: firewall-cmd
+      state: started
+      enabled: yes
+  - name: Restart firewalld
+    service:
+      name: firewall-cmd
+      state: restarted
+  - name: Restart ssh
+    service:
+      name: ssh
+      state: restarted
