@@ -46,13 +46,13 @@
     notify: Restart firewalld
 
   - name: write ssh config file
-    template: src=/srv/rhel/common/templates/sshd_config.j2 dest=/etc/ssh/sshd_config
+    template: src=/srv/fedora/common/templates/sshd_config.j2 dest=/etc/ssh/sshd_config
 
   - name: write login.defs file
-    template: src=/srv/rhel/common/templates/login.defs.j2 dest=/etc/login.defs
+    template: src=/srv/fedora/common/templates/login.defs.j2 dest=/etc/login.defs
 
   - name: write system-auth-ac file
-    template: src=/srv/rhel/common/templates/system-auth-ac.j2 dest=/etc/pam.d/system-auth-ac
+    template: src=/srv/fedora/common/templates/system-auth-ac.j2 dest=/etc/pam.d/system-auth-ac
     notify: Restart ssh
 
   handlers:
