@@ -32,16 +32,16 @@
     file: path=/etc/httpd/templates state=directory mode=0755
 
   - name: import apache2 template file into templates
-    template: src=/srv/rhel/web/templates/httpd/http_vhost.j2 /etc/httpd/templates/http_vhost.conf
+    template: src=/srv/rhel/web/httpd/templates/http_vhost.j2 /etc/httpd/templates/http_vhost.conf
 
   - name: import apache2 https template file into templates
-    template: src=/srv/rhel/web/templates/httpd/https_vhost.j2 /etc/httpd/templates/https_vhost.conf
+    template: src=/srv/rhel/web/httpd/templates/https_vhost.j2 /etc/httpd/templates/https_vhost.conf
 
   - name: import apache2 mod_ssl conf file
-    template: src=/srv/rhel/web/templates/httpd/ssl.j2 /etc/httpd/conf.d/ssl.conf
+    template: src=/srv/rhel/web/httpd/templates/ssl.j2 /etc/httpd/conf.d/ssl.conf
 
   - name: import base apache2 config file
-    template: src=/srv/rhel/web/templates/httpd/httpd.j2 /etc/httpd/conf/httpd.conf
+    template: src=/srv/rhel/web/httpd/templates/httpd.j2 /etc/httpd/conf/httpd.conf
     notify: restart apache
 
   handlers:
