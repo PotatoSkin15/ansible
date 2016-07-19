@@ -1,0 +1,16 @@
+<VirtualHost *:80>
+ServerName www.example.com
+ServerAlias example.com
+
+DocumentRoot /path/to/site
+
+RewriteEngine on
+
+<Directory "/path/to/site">
+    AllowOverride All
+    Options FollowSymLinks
+    # Allow open access
+    Require all granted
+</Directory>
+
+</VirtualHost>

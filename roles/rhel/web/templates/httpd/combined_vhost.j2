@@ -1,0 +1,68 @@
+<VirtualHost *:80>
+ServerName www.example.com
+ServerAlias example.com
+
+DocumentRoot /path/to/site
+
+RewriteEngine on
+
+<Directory "/path/to/site">
+    AllowOverride All
+    Options FollowSymLinks
+    # Allow open access
+    Require all granted
+</Directory>
+
+</VirtualHost>
+
+<VirtualHost *:443>
+DocumentRoot "/path/to/site"
+ServerName www.example.com
+# repeat ServerAlias as necessary
+ServerAlias example.com
+
+ErrorLog logs/ssl_error_log
+TransferLog logs/ssl_access_log
+LogLevel warn
+
+SSLEngine on
+
+SSLProtocol all -SSLv2 -SSLv3
+
+SSLCipherSuite ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK
+
+SSLHonorCipherOrder on
+
+SSLCertificateFile /path/to/cert.crt
+SSLCertificateKeyFile /path/to/key.key
+SSLCACertificateFile /path/to/ca.crt-root
+
+# DHParams security, requ. OpenSSL 1.0.2 and/or Apache 2.4.8
+# Commented out for now
+# To generate, run openssl dhparam -out dhparam.pem 4096
+#SSLOpenSSLConfCmd DHParameters "/etc/httpd/ssl/dhparams.pem"
+
+# Set max age in HSTS
+# HSTS (mod_headers is required) (15768000 seconds = 6 months)
+Header always set Strict-Transport-Security "max-age=15768000"
+
+<Files ~ "\.(cgi|shtml|phtml|php3?)$">
+    SSLOptions +StdEnvVars
+</Files>
+<Directory "/var/www/cgi-bin">
+    SSLOptions +StdEnvVars
+</Directory>
+<Directory "/path/to/site">
+    AllowOverride All
+    Options FollowSymLinks
+</Directory>
+
+BrowserMatch "MSIE [2-5]" \
+    nokeepalive ssl-unclean-shutdown \
+    downgrade-1.0 force-response-1.0
+
+CustomLog logs/ssl_request_log \
+    "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b"
+
+</VirtualHost>
+

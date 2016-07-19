@@ -1,0 +1,56 @@
+---
+- hosts: webservers
+  roles:
+    - apache
+    - rhel
+  vars:
+    - apache_packages:
+      - httpd
+      - httpd_tools
+      - mod_ssl
+      - php
+      - php-common
+      - php-gd
+      - php-xml
+      - php-xmlrpc
+      - openssl
+      - openssl-devel
+  remote_user: deploybot
+  tasks:
+  - name: install apache2 and php tools
+    yum: state=present name={{ item }}
+    with_items: "{{apache_packages}}"
+    notify: start apache
+
+  - name: enable apache2 with system boot
+    service: name=httpd enabled=yes
+
+  - name: create vhosts directory
+    file: path=/etc/httpd/vhosts state=directory mode=0755
+
+  - name: create templates directory for vhost examples
+    file: path=/etc/httpd/templates state=directory mode=0755
+
+  - name: import apache2 template file into templates
+    template: src=/srv/rhel/web/templates/httpd/http_vhost.j2 /etc/httpd/templates/http_vhost.conf
+
+  - name: import apache2 https template file into templates
+    template: src=/srv/rhel/web/templates/httpd/https_vhost.j2 /etc/httpd/templates/https_vhost.conf
+
+  - name: import apache2 mod_ssl conf file
+    template: src=/srv/rhel/web/templates/httpd/ssl.j2 /etc/httpd/conf.d/ssl.conf
+
+  - name: import base apache2 config file
+    template: src=/srv/rhel/web/templates/httpd/httpd.j2 /etc/httpd/conf/httpd.conf
+    notify: restart apache
+
+  handlers:
+  - name: start apache
+    service:
+      name: httpd
+      state: started
+
+  - name: restart apache
+    service:
+      name: httpd
+      state: restarted
