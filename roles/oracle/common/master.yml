@@ -1,5 +1,7 @@
 ---
 - hosts: all
+  roles:
+      - oracle
   vars:
     - common_packages:
       - vim
@@ -27,12 +29,6 @@
 
   - name: install epel repo
     yum: name=https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm state=present
-
-  - name: install webtatic key
-    rpm_key: state=present key=https://mirror.webtatic.com/yum/RPM-GPG-KEY-webtatic-el7
-
-  - name: install webtatic repo
-    yum: name=https://mirror.webtatic.com/yum/el7/webtatic-release.rpm state=present
 
   - name: update all current installed packages
     yum: name=* state=latest

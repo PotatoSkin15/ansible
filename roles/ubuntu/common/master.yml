@@ -1,5 +1,7 @@
 ---
 - hosts: all
+  roles:
+    - ubuntu
   vars:
     - common_packages:
       - vim
@@ -30,7 +32,7 @@
     with_items: "{{common_packages}}"
 
   - name: install development tools
-    apt: name=build-essential state=present
+    apt: name=build-essentials state=present
 
   - name: start and enable ufw
     service: name=ufw state=started

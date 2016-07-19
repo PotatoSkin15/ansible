@@ -1,0 +1,56 @@
+---
+- hosts: all
+  roles:
+    - suse
+  vars:
+    - common_packages:
+      - vim
+      - git
+      - wget
+      - openssh
+      - net-tools
+      - zip
+      - gzip
+      - bzip2
+      - curl
+      - dialog
+      - nfs-utils
+      - xinetd
+      - tar
+      - m4
+      - mkpasswd
+  remote_user: root
+  tasks:
+  - include: users/users.yml
+
+  - name: update all currently installed packages
+    zypper: name=* state=latest
+
+  - name: install common tools
+    zypper: state=present name={{ item }}
+    with_items:"{{common_packages}}"
+
+  - name: install development tools
+    zypper: type=pattern name=devel_basis
+
+  - name: disable selinux
+    command: setenforce 0
+
+  - name: put selinux in permissive mode
+    selinux: policy=targeted state=permissive
+
+  - name: write ssh config file
+    template: src=/srv/suse/common/templates/sshd_config.j2 dest=/etc/ssh/sshd_config
+
+  - name: write login.defs file
+    template: src=/srv/suse/common/templates/login.defs.j2 dest=/etc/login.defs
+
+  - name: write system-auth-ac file
+    template: src=/srv/suse/common/templates/system-auth-ac.j2 dest=/etc/pam.d/system-auth-ac
+    notify: Restart ssh
+
+  handlers:
+  - name: Restart ssh
+    service:
+      name: ssh
+      state: restarted

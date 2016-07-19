@@ -1,5 +1,7 @@
 ---
 - hosts: all
+  roles:
+    - fedora
   vars:
     - common_packages:
       - vim
