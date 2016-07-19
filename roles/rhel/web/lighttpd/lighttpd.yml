@@ -1,0 +1,65 @@
+---
+- hosts: webservers
+  roles:
+    - lighttpd
+    - rhel
+  vars:
+    - lighttpd_packages:
+      - lighttpd
+      - lighttpd-fastcgi
+      - httpd-tools
+      - php
+      - php-common
+      - php-fpm
+      - php-gd
+      - php-xml
+      - php-xmlrpc
+      - openssl
+      - openssl-devel
+  remote_user: deploybot
+  tasks:
+  - name: install lighttpd and php tools
+    yum: state=present name={{ item }}
+    with_items: "{{lighttpd_packages}}"
+
+  - name: enable lighttpd with system boot
+    service: name=lighttpd state=started enabled=yes
+
+  - name: create vhost and templates directory
+    file:
+      - path=/etc/lighttpd/templates state=directory mode=0755
+      - path=/etc/lighttpd/ssl state=directory mode=0755
+
+  - name: import lighttpd template files into templates directory
+    template:
+      - src=/srv/roles/rhel/web/lighttpd/templates/http_vhost.j2 dest=/etc/lighttpd/templates/http_vhost.conf
+      - src=/srv/roles/rhel/web/lighttpd/templates/https_vhost.j2 dest=/etc/lighttpd/templates/https_vhost.conf
+      - src=/srv/roles/rhel/web/lighttpd/templates/combined_vhost.j2 dest=/etc/lighttpd/templates/combined_vhost.conf
+
+  - name: import php config files
+    template:
+      - src=/srv/roles/rhel/web/lighttpd/files/php.j2 dest=/etc/php.ini
+      - src=/srv/roles/rhel/web/lighttpd/files/php-fpm.j2 dest=/etc/php-fpm.d/www.conf
+
+  - name: start and enable php-fpm
+    service: name=php-fpm state=started enabled=yes
+
+  - name: import lighttpd config file
+    template:
+      - src=/srv/roles/rhel/web/lighttpd/files/fastcgi.j2 dest=/etc/lighttpd/conf.d/fastcgi.conf
+      - src=/srv/roles/rhel/web/lighttpd/files/lighttpd.j2 dest=/etc/lighttpd/lighttpd.conf
+      - src=/srv/roles/rhel/web/lighttpd/files/modules.j2 dest=/etc/lighttpd/modules.conf
+    notify:
+      - restart lighttpd
+      - restart php-fpm
+
+  handlers:
+  - name: restart lighttpd
+    service:
+      name: lighttpd
+      status: restarted
+
+  - name: restart php-fpm
+    service:
+      name: php-fpm
+      status: restarted
