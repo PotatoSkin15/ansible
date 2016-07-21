@@ -1,0 +1,21 @@
+---
+- hosts: dbservers
+  roles:
+    - pgsql
+    - rhel
+  vars:
+    - pgsql_packages:
+      - postgresql
+      - postgresql-libs
+      - postgresql-server
+      - postgresql-contrib
+  remote_user: deploybot
+  become: yes
+  become_method: sudo
+  tasks:
+  - name: install pgsql
+    yum: state=present name={{ item }}
+    with_items: "{{pgsql_packages}}"
+
+  - name: start and enable pgsql with boot
+    service: name=postgresql state=started enabled=yes
