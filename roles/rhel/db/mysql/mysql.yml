@@ -9,56 +9,56 @@
       - mariadb-server
       - mariadb-devel
   remote_user: deploybot
-    become: yes
-    become_method: sudo
-    tasks:
-    - name: install mysql/mariadb
-      yum: state=present name={{ item }}
-      with_items: "{{mysql_packages}}"
+  become: yes
+  become_method: sudo
+  tasks:
+  - name: install mysql/mariadb
+    yum: state=present name={{ item }}
+    with_items: "{{mysql_packages}}"
 
-    - name: enable mysql with system boot
-      service: name=mariadb state=started enabled=yes
+  - name: enable mysql with system boot
+    service: name=mariadb state=started enabled=yes
 
-    - name: create slow query log file
-      file: path=/var/log/mariadb/slow-query.log owner=mysql group=mysql mode=0644
+  - name: create slow query log file
+    file: path=/var/log/mariadb/slow-query.log owner=mysql group=mysql mode=0644
 
-    - name: create mysql root password
-      shell: dd if=/dev/urandom bs=1 count=32 2>/dev/null | base64 -w 0 | rev | cut -b 2- | rev > /root/mysql
+  - name: create mysql root password
+    shell: dd if=/dev/urandom bs=1 count=32 2>/dev/null | base64 -w 0 | rev | cut -b 2- | rev > /root/mysql
 
-    - name: change mysql root pwd
-      mysql_user: name=root password="{{ lookup('file','/root/mysql') }}" check_implicit_admin=yes login_user=root login_password='' state=present
+  - name: change mysql root pwd
+    mysql_user: name=root password="{{ lookup('file','/root/mysql') }}" check_implicit_admin=yes login_user=root login_password='' state=present
 
-    - name: create my.cnf password
-      template: src=/srv/rhel/db/mysql/templates/my.j2 dest=/root/.my.cnf mode=0600
+  - name: create my.cnf password
+    template: src=/srv/rhel/db/mysql/templates/my.j2 dest=/root/.my.cnf mode=0600
 
-    - name: remove temporary mysql file
-      file: path=/root/mysql state=absent
+  - name: remove temporary mysql file
+    file: path=/root/mysql state=absent
 
-    - name: import mysql conf file
-      template: src=/srv/rhel/db/mysql/files/mysql.j2 dest=/etc/my.cnf
-      notify: restart mysql
+  - name: import mysql conf file
+    template: src=/srv/rhel/db/mysql/files/mysql.j2 dest=/etc/my.cnf
+    notify: restart mysql
 
-    - name: perform mysql secure installation tasks
-      mysql_user: name='' host_all=yes state=absent
+  - name: perform mysql secure installation tasks
+    mysql_user: name='' host_all=yes state=absent
 
-    - name: disallow root login remotely
-      command: 'mysql -NBe "{{ item }}"'
-      with_items:
-        - DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-      changed_when: false
+  - name: disallow root login remotely
+    command: 'mysql -NBe "{{ item }}"'
+    with_items:
+      - DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+    changed_when: false
 
-    - name: remove mysql test db
-      mysql_db: name=test state=absent
+  - name: remove mysql test db
+    mysql_db: name=test state=absent
 
-    - name: flush mysql privs
-      command: 'mysql -NBe "{{ item }}"'
-      with_items:
-        - flush privileges;
-      changed_when: false
-      notify: restart mysql
+  - name: flush mysql privs
+    command: 'mysql -NBe "{{ item }}"'
+    with_items:
+      - flush privileges;
+    changed_when: false
+    notify: restart mysql
 
-    handlers:
-    - name: restart mysql
-      service:
-        name: mariadb
-        state: started
+  handlers:
+  - name: restart mysql
+    service:
+      name: mariadb
+      state: started
