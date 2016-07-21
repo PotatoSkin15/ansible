@@ -11,6 +11,8 @@
       - php-common
       - php-fpm
       - php-gd
+      - php-mysqlnd
+      - php-pgsql
       - php-xml
       - php-xmlrpc
       - openssl

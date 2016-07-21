@@ -11,6 +11,8 @@
       - php
       - php-common
       - php-gd
+      - php-mysqlnd
+      - php-pgsql
       - php-xml
       - php-xmlrpc
       - openssl
@@ -33,9 +35,9 @@
 
   - name: import apache2 template files into templates
     template:
-      - src=/srv/roles/rhel/web/httpd/templates/http_vhost.j2 /etc/httpd/templates/http_vhost.conf
-      - src=/srv/roles/rhel/web/httpd/templates/https_vhost.j2 /etc/httpd/templates/https_vhost.conf
-      - src=/srv/roles/rhel/web/httpd/templates/combined_vhost.j2 /etc/httpd/templates/combined_vhost.conf
+      - src=/srv/roles/rhel/web/httpd/templates/http_vhost.j2 dest=/etc/httpd/templates/http_vhost.conf
+      - src=/srv/roles/rhel/web/httpd/templates/https_vhost.j2 dest=/etc/httpd/templates/https_vhost.conf
+      - src=/srv/roles/rhel/web/httpd/templates/combined_vhost.j2 dest=/etc/httpd/templates/combined_vhost.conf
 
   - name: import php config file
     template: src=/srv/roles/rhel/web/httpd/files/php.j2 dest=/etc/php.ini
