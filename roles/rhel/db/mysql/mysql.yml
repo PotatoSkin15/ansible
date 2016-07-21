@@ -9,7 +9,6 @@
       - mariadb-server
       - mariadb-devel
   remote_user: deploybot
-  remote_user: deploybot
     become: yes
     become_method: sudo
     tasks:
