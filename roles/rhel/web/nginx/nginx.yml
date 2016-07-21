@@ -11,6 +11,8 @@
       - php-common
       - php-fpm
       - php-gd
+      - php-mysqlnd
+      - php-pgsql
       - php-xml
       - php-xmlrpc
       - openssl
@@ -28,23 +30,24 @@
     file:
       - path=/etc/nginx/vhosts state=directory mode=0755
       - path=/etc/nginx/templates state=directory mode=0755
+      - path=/etc/nginx/ssl state=directory mode=0755
 
-  - name: import nginx http template files into templates
+  - name: import nginx template files into templates
     template:
-      - src=/srv/rhel/web/nginx/templates/http_vhost.j2 dest=/etc/nginx/templates/http_vhost
-      - src=/srv/rhel/web/nginx/templates/https_vhost.j2 dest=/etc/nginx/templates/https_vhost
-      - src=/srv/rhel/web/nginx/templates/combined_vhost.j2 dest=/etc/nginx/templates/combined_vhost
+      - src=/srv/roles/rhel/web/nginx/templates/http_vhost.j2 dest=/etc/nginx/templates/http_vhost
+      - src=/srv/roles/rhel/web/nginx/templates/https_vhost.j2 dest=/etc/nginx/templates/https_vhost
+      - src=/srv/roles/rhel/web/nginx/templates/combined_vhost.j2 dest=/etc/nginx/templates/combined_vhost
 
   - name: import php config file
     template:
-    - src=/srv/rhel/web/nginx/files/php.j2 dest=/etc/php.ini
-    - src=/srv/rhel/web/nginx/files/php-fpm.j2 dest=/etc/php-fpm.d/www.conf
+      - src=/srv/roles/rhel/web/nginx/files/php.j2 dest=/etc/php.ini
+      - src=/srv/roles/rhel/web/nginx/files/php-fpm.j2 dest=/etc/php-fpm.d/www.conf
 
   - name: start and enable php-fpm service
     service: name=php-fpm state=started enabled=yes
 
   - name: import nginx config file
-    template: src=/srv/rhel/web/nginx/templates/nginx.j2 dest=/etc/nginx/nginx.conf
+    template: src=/srv/roles/rhel/web/nginx/templates/nginx.j2 dest=/etc/nginx/nginx.conf
     notify:
       - restart nginx
       - restart php-fpm
