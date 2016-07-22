@@ -31,7 +31,7 @@
     shell: dd if=/dev/urandom bs=1 count=32 2>/dev/null | base64 -w 0 | rev | cut -b 2- | rev > /home/deploybot/pgsql
 
   - name: change pgsql user password
-    postgresql_user: name=postgres password="{{ lookup('file','/home/deploybot/pgsql') }}" check_implicit_admin=yes login_user=postgres login_password='' state=present
+    postgresql_user: name=postgres password="{{ lookup('file','/home/deploybot/pgsql') }}" login_user=postgres login_password='' state=present
     become: true
     become_user: postgres
 
@@ -41,5 +41,5 @@
   handlers:
   - name: restart pgsql
     service:
-      name: pgsql
+      name: postgresql
       state: restarted
