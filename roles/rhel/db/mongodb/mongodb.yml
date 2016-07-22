@@ -1,0 +1,16 @@
+---
+- hosts: dbservers
+  roles:
+    - mongodb
+    - rhel
+  vars:
+    - mongo_packages
+      - mongodb
+      - mongodb-server
+      - php-pecl
+      - php-pecl-mongo
+  remote_user: deploybot
+  become: yes
+  become_method: sudo
+  tasks:
+    
