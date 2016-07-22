@@ -1,0 +1,45 @@
+---
+- hosts: dbservers
+  roles:
+    - pgsql
+    - rhel
+  vars:
+    - pgsql_packages:
+      - postgresql
+      - postgresql-libs
+      - postgresql-server
+      - postgresql-contrib
+  remote_user: deploybot
+  become: yes
+  become_method: sudo
+  tasks:
+  - name: install pgsql
+    yum: state=present name={{ item }}
+    with_items: "{{pgsql_packages}}"
+
+  - name: init pgsql db
+    command: postgresql-setup initdb
+
+  - name: start and enable pgsql with boot
+    service: name=postgresql state=started enabled=yes
+
+  - name: write modified pg_hba.conf file
+    template: src=/srv/rhel/db/pgsql/files/pg_hba.conf.j2 dest=/var/lib/pgsql/data/pg_hba.conf owner=postgres group=postgres
+    notify: restart pgsql
+
+  - name: create pgsql password
+    shell: dd if=/dev/urandom bs=1 count=32 2>/dev/null | base64 -w 0 | rev | cut -b 2- | rev > /home/deploybot/pgsql
+
+  - name: change pgsql user password
+    postgresql_user: name=postgres password="{{ lookup('file','/home/deploybot/pgsql') }}" login_user=postgres login_password='' state=present
+    become: true
+    become_user: postgres
+
+  - name: create .pgpass conf file
+    template: src=/srv/rhel/db/pgsql/templates/pgpass.j2 dest=/root/.pgpass mode=0600
+
+  handlers:
+  - name: restart pgsql
+    service:
+      name: postgresql
+      state: restarted
