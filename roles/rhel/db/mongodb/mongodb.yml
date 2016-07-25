@@ -1,0 +1,23 @@
+---
+- hosts: dbservers
+  roles:
+    - mongodb
+    - rhel
+  vars:
+    - mongo_packages:
+      - mongodb
+      - mongodb-server
+      - php-pecl-mongo
+  remote_user: deploybot
+  become: yes
+  become_method: sudo
+  tasks:
+  - name: install mongodb
+    yum: state=present name={{ item }}
+    with_items: "{{mongo_packages}}"
+
+  - name: create mongodb data directory
+    file: path=/data/db state=directory mode=0755 owner=mongodb group=mongodb
+
+  - name: start and enable mongodb at boot
+    service: name=mongod state=started enabled=yes
