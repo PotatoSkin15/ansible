@@ -1,0 +1,65 @@
+---
+
+   - name: Install EPEL Key
+     rpm_key: >
+        state=present
+	key={{ item }}
+     with_items: "{{ var_epel_key }}"
+
+   - name: Install Webtatic Key
+     rpm-key: >
+        state=present
+	key={{ item }}
+     with_items: "{{ var_webtatic_key }}"
+
+   - name: Install EPEL Repo
+     yum: >
+        name={{ item }}
+	state=present
+     with_items: "{{ var_epel_repo }}"
+
+   - name: Install Webtatic Repo
+     yum: >
+        name={{ item }}
+	state=present
+     with_items: "{{ var_webtatic_repo }}"
+
+   - name: Update all currently installed packages
+     yum: >
+        name=*
+	state=latest
+
+   - name: Install the 'Development Tools' Package Group
+     yum: >
+        name="@^Development Tools"
+	state=present
+
+   - name: Ensure RHEL/CentOS/Oracle GPG Key Installed
+     rpm_key: >
+        state=present
+	key={{ item.key }}
+     when: ansible_distribution == "{{ item.os }}"
+     with_items:
+        - { os: 'RedHat', key: '/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release' }
+	- { os: 'CentOS', key: '/etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7' }
+	- { os: 'OracleLinux', key: '/etc/pki/rpm-gpg/RPM-GPG-KEY-oracle' }
+
+   - name: Ensure gpgcheck Enabled in yum.conf
+     lineinfile: >
+        state=present
+	dest=/etc/yum.conf
+	regexp='^gpgcheck='
+	line=gpgcheck=1
+
+   - name: Get list of all current installed repos
+     command: "ls /etc/yum.repos.d"
+     register: yumrepos
+     always_run: yes
+     changed_when: false
+
+   - name: Ensure gpgcheck Enabled for All Repos
+     lineinfile: >
+        state=absent
+	dest=/etc/yum.repos.d/{{ item }}
+	regexp='^gpgcheck'
+     with_items: "{{ yumrepos.stdout_lines }}"

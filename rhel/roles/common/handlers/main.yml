@@ -1,0 +1,17 @@
+---
+
+   - name: Start and enable firewalld
+     service: 
+       name: firewall-cmd
+       state: started
+       enabled: yes
+
+   - name: Restart firewalld
+     service:
+       name: firewall-cmd
+       state: restarted
+
+   - name: Restart SSH
+     service:
+       name: ssh
+       state: restarted

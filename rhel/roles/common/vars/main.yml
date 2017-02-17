@@ -1,0 +1,23 @@
+---
+
+var_common_packages:
+   - vim
+   - git
+   - wget
+   - openssh
+   - net-tools
+   - firewalld
+   - zip
+   - gzip
+   - bzip2
+   - curl
+   - dialog
+   - nfs-utils
+   - xinetd
+   - tar
+   - m4
+   - mkpasswd
+var_epel_key: https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7Server
+var_webtatic_key: https://mirror.webtatic.com/yum/RPM-GPG-KEY-webtatic-el7
+var_epel_repo: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+var_webtatic_repo: https://mirror.webtatic.com/yum/el7/webtatic-release.rpm

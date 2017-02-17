@@ -1,0 +1,7 @@
+---
+
+   - include: packages.yml
+     tags: installs
+
+   - include: configuration.yml
+     tags: configs
