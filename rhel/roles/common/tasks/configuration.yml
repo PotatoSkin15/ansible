@@ -1,6 +1,22 @@
 ---
 
-   name: Put SELinux in permissive mode
-   selinux: >
+  - name: Put SELinux in permissive mode
+    selinux: >
       policy=targeted
       state=permissive
+
+  - name: Copy sshd_config
+    copy: >
+      src=etc/ssh/sshd_config
+      dest=/etc/ssh/sshd_config
+      owner=root
+      group=root
+      mode=0644
+
+  - name: Copy login.defs
+    copy: >
+      src=etc/login.defs
+      dest=/etc/login.defs
+      owner=root
+      group=root
+      mode=0644
