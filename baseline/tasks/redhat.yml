@@ -30,12 +30,56 @@
       name: '{{ item }}'
       state: present
     with_items: '{{ var_epel_repo_7 }}'
+    when:
+      - ansible_os_family == "RedHat"
+      - ansible_distribution_major_version == "7"
 
   - name: Install EPEL Repo - RHEL 6
     yum:
       name: '{{ item }}'
       state: present
     with_items: '{{ var_epel_repo_6 }}'
+    when:
+      - ansible_os_family == "RedHat"
+      - ansible_distribution_major_version == "6"
+
+  - name: Ensure RHEL/CentOS/Oracle GPG Key Installed
+    rpm_key:
+      state: present
+      key: '{{ item.key }}'
+    with_items:
+      - { os: 'RedHat', key: '/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release' }
+      - { os: 'CentOS', key: '/etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7' }
+      - { os: 'OracleLinux', key: '/etc/pki/rpm-gpg/RPM-GPG-KEY-oracle' }
+    when:
+      - ansible_distribution == "{{ item.os }}"
+      - ansible_os_family == "RedHat"
+
+  - name: Ensure gpgcheck Enabled in yum.conf
+    lineinfile:
+      state: present
+      dest: /etc/yum.conf
+      regexp: '^gpgcheck='
+      line: gpgcheck=1
+    when:
+      - ansible_os_family == "RedHat"
+
+  - name: Get list of all current installed repos
+    command: "ls /etc/yum.repos.d"
+    register: yumrepos
+    always_run: yes
+    changed_when: false
+    when:
+      - ansible_os_family == "RedHat"
+
+  - name: Ensure gpgcheck Enabled for All Repos
+    lineinfile:
+      state: absent
+      dest: /etc/yum.repos.d/{{ item }}
+      regexp: '^gpgcheck'
+    with_items: "{{ yumrepos.stdout_lines }}"
+    when:
+      - ansible_os_family == "RedHat"
 
   - name: Update all pkgs - RHEL-Based
     yum:

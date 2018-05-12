@@ -12,4 +12,3 @@ var_suse_pkgs:
   - kernel-default-devel
   - curl
   - dialog
-  - devel_basis

@@ -1,0 +1,16 @@
+---
+
+  - name: Update all pkgs - Debian
+    apt:
+      name: "*"
+      state: latest
+    when:
+      - ansible_os_family == "Debian"
+
+  - name: Install base pkgs - Debian
+    apt:
+      name: '{{ item }}'
+      state: present
+    with_items: '{{ var_debian_pkgs }}'
+    when:
+      - ansible_os_family == "Debian"

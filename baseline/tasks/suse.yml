@@ -1,0 +1,55 @@
+---
+
+  - name: Update all pkgs - SUSE
+    zypper:
+      name: '*'
+      state: latest
+    when:
+      - ansible_os_family == "Suse"
+
+  - name: Update all patches - SUSE
+    zypper:
+      name: '*'
+      state: latest
+      type: patch
+    when:
+      - ansible_os_family == "Suse"
+
+  - name: Install base pkgs - SUSE
+    zypper:
+      name: '{{ item }}'
+      state: present
+    with_items: '{{ var_suse_pkgs }}'
+    when:
+      - ansible_os_family == "Suse"
+
+  - name: Install devel packages
+    command: 'zypper -n in -R -t pattern devel_basis'
+
+  - name: Disable mounting of cramfs, freevxfs, jffs2, hfs, hfsplus, squashfs, udf, FAT
+    lineinfile:
+      state: present
+      dest: /etc/modprobe.d/fs.conf
+      create: yes
+      owner: root
+      group: root
+      mode: 0660
+      regexp: '^install\s*\\b{{ item }}\\b\s*'
+      line: 'install {{ item }} /bin/true'
+    with_items:
+      - cramfs
+      - freevxfs
+      - jffs2
+      - hfs
+      - hfsplus
+      - squashfs
+      - udf
+      - vfat
+
+  - name: Add nodev, noexec, nosuid to /dev/shm
+    mount:
+      state: mounted
+      fstype: tmpfs
+      src: tmpfs
+      name: /dev/shm
+      opts: defaults,nodev,noexec,nosuid
