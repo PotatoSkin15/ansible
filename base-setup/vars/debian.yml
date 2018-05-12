@@ -1,0 +1,16 @@
+---
+
+var_debian_pkgs:
+  - git
+  - vim
+  - htop
+  - wget
+  - openssh-server
+  - net-tools
+  - firewalld
+  - zip
+  - bzip2
+  - curl
+  - dialog
+  - nano
+  - build-essential

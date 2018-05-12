@@ -1,0 +1,80 @@
+---
+
+  - name: Set SELinux mode
+    selinux:
+      policy: targeted
+      state: '{{ item }}'
+    with_items:
+      - permissive
+
+  - name: Install EPEL Repo Key - RHEL 7
+    rpm_key:
+      state: present
+      key: '{{ item }}'
+    with_items: '{{ var_epel_key_7 }}'
+    when:
+      - ansible_os_family == "RedHat"
+      - ansible_distribution_major_version == "7"
+
+  - name: Install EPEL Repo Key - RHEL 6
+    rpm_key:
+      state: present
+      key: '{{ item }}'
+    with_items: '{{ var_epel_key_6 }}'
+    when:
+      - ansible_os_family == "RedHat"
+      - ansible_distribution_major_version == "6"
+
+  - name: Install EPEL Repo - RHEL 7
+    yum:
+      name: '{{ item }}'
+      state: present
+    with_items: '{{ var_epel_repo_7 }}'
+
+  - name: Install EPEL Repo - RHEL 6
+    yum:
+      name: '{{ item }}'
+      state: present
+    with_items: '{{ var_epel_repo_6 }}'
+
+  - name: Update all pkgs - RHEL-Based
+    yum:
+      name: "*"
+      state: latest
+    when:
+      - ansible_os_family == "RedHat"
+
+  - name: Update all pkgs - Fedora
+    dnf:
+      name: "*"
+      state: latest
+    when:
+      - ansible_os_family == "RedHat"
+      - ansible_pkg_mgr == "dnf"
+
+  - name: Install base pkgs - RHEL-Based
+    yum:
+      name: '{{ item }}'
+      state: present
+    with_items: '{{ var_rhel_pkgs }}'
+    when:
+      - ansible_os_family == "RedHat"
+
+  - name: Install group pkgs - RHEL-Based
+    yum:
+      name: '{{ item }}'
+      state: present
+    with_items:
+      - "@^Development Tools"
+      - "@^C Development Tools and Libraries"
+    when:
+      - ansible_os_family == "RedHat"
+
+  - name: Install base pkgs - Fedora
+    dnf:
+      name: '{{ item }}'
+      state: present
+    with_items: '{{ var_fedora_pkgs }}'
+    when:
+      - ansible_os_family == "RedHat"
+      - ansible_pkg_mgr == "dnf"

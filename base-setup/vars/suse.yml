@@ -1,0 +1,15 @@
+---
+
+var_suse_pkgs:
+  - git
+  - vim
+  - htop
+  - wget
+  - openssh-server
+  - net-tools
+  - zip
+  - bzip2
+  - kernel-default-devel
+  - curl
+  - dialog
+  - devel_basis

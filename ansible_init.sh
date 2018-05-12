@@ -2,7 +2,7 @@
 
 # Ansible project init script
 # KP, 4/21/17
-# v1.1
+# v1.2 - 8/24/17
 
 clear
 
@@ -39,7 +39,7 @@ done
 a_base=~/ansible
 a_tree=(defaults files handlers tasks vars)
 p_base=$a_base/$project
-r_base=$p_base/$role
+r_base=$p_base/roles/$role
 
 if [[ ! -e "$a_base" ]]; then
   mkdir $a_base

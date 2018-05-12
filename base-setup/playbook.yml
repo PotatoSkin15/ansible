@@ -1,0 +1,62 @@
+---
+
+- hosts: all
+  become: yes
+  become_user: root
+
+  pre_tasks:
+    - name: Load OS specific variables
+      include_vars: "{{ item }}"
+      with_first_found:
+        - "vars/{{ ansible_os_family | lower }}.yml"
+
+  tasks:
+    - name: Load OS-specific tasks
+      include_tasks: "{{ item }}"
+      with_first_found:
+        - "tasks/{{ ansible_os_family | lower }}.yml"
+
+    - name: Set SELinux mode
+      selinux:
+        policy: targeted
+        state: '{{ item }}'
+      with_items:
+        - permissive
+
+    - name: Update all pkgs - Debian
+      apt:
+        name: "*"
+        state: latest
+      when:
+        - ansible_os_family == "Debian"
+
+    - name: Update all pkgs - OpenSUSE
+      zypper:
+        name: '*'
+        state: latest
+      when:
+        - ansible_os_family == "Suse"
+
+    - name: Update all patches - OpenSUSE
+      zypper:
+        name: '*'
+        state: latest
+        type: patch
+      when:
+        - ansible_os_family == "Suse"
+
+    - name: Install base pkgs - Debian
+      apt:
+        name: '{{ item }}'
+        state: present
+      with_items: '{{ var_debian_pkgs }}'
+      when:
+        - ansible_os_family == "Debian"
+
+    - name: Install base pkgs - OpenSUSE
+      zypper:
+        name: '{{ item }}'
+        state: present
+      with_items: '{{ var_suse_pkgs }}'
+      when:
+        - ansible_os_family == "Suse"
