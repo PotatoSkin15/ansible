@@ -1,0 +1,91 @@
+---
+
+  - name: Disable mounting of cramfs, freevxfs, jffs2, hfs, hfsplus, squashfs, udf, FAT
+    lineinfile:
+      state: present
+      dest: /etc/modprobe.d/fs.conf
+      create: yes
+      owner: root
+      group: root
+      mode: 0660
+      regexp: '^install\s*\\b{{ item }}\\b\s*'
+      line: 'install {{ item }} /bin/true'
+    with_items:
+      - cramfs
+      - freevxfs
+      - jffs2
+      - hfs
+      - hfsplus
+      - squashfs
+      - udf
+      - vfat
+
+  - name: Add nodev, noexec, nosuid to /dev/shm
+    mount:
+      state: mounted
+      fstype: tmpfs
+      src: tmpfs
+      name: /dev/shm
+      opts: defaults,nodev,noexec,nosuid
+
+  - name: Disable autofs
+    service:
+      name: autofs
+      state: stopped
+      enabled: no
+
+  - name: Init AIDE
+    command: 'aide --init'
+
+  - name: Init AIDE DB
+    command: 'mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db'
+
+  - name: Ensure correct bootlader configs
+    file:
+      path: /boot/grub2/grub.cfg
+      owner: root
+      group: root
+      mode: 0600
+
+  - name: Ensure authentication is required for single user mode
+    lineinfile:
+      state: present
+      dest: "{{ item }}"
+      regexp: '^ExecStart='
+      line: 'ExecStart=-/bin/sh -c "/usr/sbin/sulogin; /usr/bin/systemctl --fail --no-block default"'
+      backup: yes
+    with_items:
+      - /usr/lib/systemd/system/rescue.service
+      - /usr/lib/systemd/system/emergency.service
+    when:
+      - ansible_service_mgr == "systemd"
+
+  - name: Ensure authentication is required for single user mode
+    lineinfile:
+      state: present
+      dest: /etc/sysconfig/init
+      regexp: '^SINGLE'
+      line: 'SINGLE=/sbin/sulogin'
+      backup: yes
+    when:
+      - ansible_service_mgr == "upstart"
+
+  - name: Disable core dumps
+    lineinfile:
+      state: present
+      dest: /etc/security/limits.conf
+      regexp: '^\*\s*\\bhard\\b\s*\\bcore\\b\s*'
+      line: "* hard core 0"
+      insertafter: EOF
+
+  - name: Disable Core Dumps for SUID programs
+    sysctl:
+      name: fs.suid_dumpable
+      value: 0
+      state: present
+
+  - name: Enable address space layout randomization
+    sysctl:
+      state: present
+      name: kernel.randomize_va_space
+      value: 2
